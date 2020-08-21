@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html  xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>注册</title>
+    <script th:src="@{/jquery/jquery.min.js}"></script>
+</head>
+<body>
+
+账号：<input type="text" id="userId"></input> 
+昵称：
+	<input type="text" id="userName"></input> <br>
+密码：<input type="password" id="pwd"></input>  
+确认密码：<input type="password" id="apwd"></input>  <br>
+<button onclick="register()">注册</button>
+
+<script type="text/javascript">
+function register() { 
+	var user_id=$("#userId").val();
+	var user_name=$("#userName").val();
+	var pwd=$("#pwd").val();
+	var apwd=$("#apwd").val();
+	if(user_id!=""&&pwd!=""&&apwd!=""){
+		if(pwd!=apwd){
+			alert("两次密码输入不同");
+			return;
+		}
+		$.ajax({
+			type : "post",
+			url : "/sys/register", //向后端请求数据的url
+			data : {"userId":user_id,"userName":user_name,"pwd":pwd},
+			success : function(data) {
+				console.log(data);
+				if(data.result=="0"){
+					alert(data.message);
+				}else{
+					alert("注册成功--用户账号："+user_id);
+				}
+			}
+		});
+		
+	}else{
+		alert("账,号或密码不能为空");
+	}
+}    
+</script>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>好友列表</title>
+<style type="text/css">
+.right {
+	text-align: right;
+	color: #6699ff;
+	margin-right: 20px;
+}
+
+.left {
+	text-align: left;
+}
+
+.message_div {
+	width: 500px;
+	height: 600px;
+	margin: auto;
+	border: 2px solid #a1a1a1;
+}
+
+.friend_li {
+	width: 400px;
+	list-style: none;
+	box-sizing: border-box;
+	padding: 10px;
+	float: left;
+	box-shadow: 0 0 6px 0 rgba(0, 0, 0, 0.20);
+	border-radius: 3px;
+	font-size: 13px;
+	color: #333333;
+	margin-left: 10px;
+	margin-bottom: 20px;
+}
+</style>
+<script th:src="@{/jquery/jquery.min.js}"></script>
+</head>
+<body>
+<h3 style="text-align: center; color: blue">
+	当前用户：	<span style="color: #333333;font-size:15px" id="user"></span>
+	</h3>
+	<div class="message_div">
+		<ul class="friend_list">
+		</ul>
+	</div>
+</body>
+<script type="text/javascript">
+//获取上一页面传递的用户编号
+var url = decodeURI(window.location.href);
+var argsIndex = url .split("?obj=");
+var user_id = argsIndex[1];
+$("#user").html(user_id);
+ var ws = null;
+ var table = document.body.querySelector('.friend_list');//消息列表ul
+    //获取好友列表
+    getFriendList();
+	function getFriendList() {
+			$.ajax({
+				type : "post",
+				url : "/sys/getFriendList", //向后端请求数据的url
+				data : {user_id},
+				success : function(data) {
+					if(data.result=="0"){
+						alert("无数据");
+					}else{
+						setFriendList(data.data);
+					}
+				}
+			});
+	}
+	//显示好友列表
+	function setFriendList(data) {
+		var cells = document.body.querySelectorAll('.friend_li');
+		for (var i = cells.length - 1; i >= 0; i--) {
+			table.removeChild(cells[i]);
+		}
+		var newCount = 0;
+		var item;
+		var li;
+		if (data != null) {
+			newCount = data.length;
+		}
+		for (var i = 0; i < newCount; i++) {
+			item=data[i];
+			li = document.createElement('li');
+				li.className = 'friend_li left';
+			li.innerHTML='('+item.friendId+')'+item.friendName;
+			li.id=item.friendId;
+			li.name=item.friendName;
+			li.addEventListener("click", function(e) {
+				openMessageCon(this.id,this.name);
+			}, true);
+			table.appendChild(li);
+		} 
+	} 
+	
+	function openMessageCon(friendId,friendName){
+		var obj = user_id; //传给弹出页面参数
+		var friendId = friendId; 
+		var friendName = friendName; 
+		var url = 'message_conver?obj='+obj+'&friendId='+friendId+'&friendName='+friendName;
+		url = encodeURI(url);
+		window.open(url, "");
+	}
+</script>
+</html>

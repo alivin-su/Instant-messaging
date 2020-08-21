@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>聊天会话</title>
+<style type="text/css">
+.right {
+	text-align: right;
+	color: #6699ff;
+	margin-right: 20px;
+}
+
+.left {
+	text-align: left;
+}
+
+.message_div {
+	width: 500px;
+	height: 450px;
+	margin: auto;
+	border: 2px solid #a1a1a1;
+}
+
+.input {
+	width: 300px;
+	height: 20px;
+}
+
+.input_div {
+	margin: 20px;
+	text-align: center;
+}
+</style>
+<script th:src="@{/jquery/jquery.min.js}"></script>
+</head>
+<body>
+	<h3 style="text-align: center; color: blue">
+	当前用户：	<span style="color: #333333;font-size:15px" id="user"></span>
+	</h3>
+	<div style="text-align: center; margin-right:400px; color: #333333" id="friend"></div>
+	<div class="message_div">
+		<ul class="message_list">
+		</ul>
+	</div>
+	<div class="input_div">
+		<input class="input" type="text" id="message_content"></input>
+		<button onclick="sendMessage()">发送</button>
+	</div>
+</body>
+<script type="text/javascript">
+var arrUrl = decodeURI(window.location.href);
+var user_id = getParam('obj');
+var friend_id=getParam('friendId');
+var friend_name=getParam('friendName');
+$("#user").html(user_id);//
+$("#friend").html("好友："+friend_id+"--"+friend_name);//
+var ws = null;
+
+var table = document.body.querySelector('.message_list');//消息列表ul
+    //获取历史消息记录
+    getMessageList();
+  //websocket连接
+    connect(user_id);
+	function getMessageList() {
+	
+			$.ajax({
+				type : "post",
+				url : "/sys/messageList", //向后端请求数据的url
+				data : {user_id,friend_id},
+				success : function(data) {
+					if(data.result=="0"){
+						alert("无数据");
+					}else{
+						setHisMessageList(data.data);
+					}
+				}
+			});
+	}
+	//显示消息历史列表
+	function setHisMessageList(data) {
+		var cells = document.body.querySelectorAll('.message_li');
+		for (var i = cells.length - 1; i >= 0; i--) {
+			table.removeChild(cells[i]);
+		}
+		
+		var newCount = 0;
+		var item;
+		var li;
+		if (data != null) {
+			newCount = data.length;
+		}
+		for (var i = 0; i < newCount; i++) {
+			item=data[i];
+			li = document.createElement('li');
+			if (item.type == '1') {
+				li.className = 'message_li right';
+			} else if (item.type == '2') {
+				li.className = 'message_li left';
+			}
+			li.innerHTML=item.content;
+			li.id=item.msgId;
+			table.appendChild(li);
+		} 
+	} 
+//发送消息
+ function sendMessage(){
+	var message_content=$("#message_content").val();
+	 var li= document.createElement('li');
+	 li.className = 'message_li right';
+	 li.innerHTML=message_content;
+	 var msgId=getNowTimeStr();
+	 li.id=msgId;
+	 table.appendChild(li);
+	 $("#message_content").val("");
+	 sendContentToFriend(msgId,message_content);
+ }
+ function sendContentToFriend(msgId,message_content){
+	 var time =getNowTime();
+	 if(message_content!=null&&message_content!=""){
+		    console.log("friend_id"+friend_id);
+			$.getJSON( '/sendmsg?friend_id='+friend_id+'&user_id='+user_id+'&msg='+message_content+'&time='+time+'&msgId='+msgId, function(data) {
+				alert(data);
+			});
+			//将消息上传到服务器端
+			$.ajax({
+				type : "post",
+				url : "/sys/saveMessage", //向后端请求数据的url
+				data : {"msgId":msgId,"content":message_content,"sendId":user_id,"receiveId":friend_id,"time":time},
+				success : function(data) {
+					/* if(data.result=="0"){
+						alert("上传失败");
+					}else{
+						alert("上传成功");
+					} */
+				}
+			});
+	   }
+ }
+ // 获取系统当前时间
+ function getNowTime(){
+	 var date = new Date(); 
+		// 获取当前时间
+		var d = new Date();
+		var yy=d.getFullYear();
+		var MM=d.getMonth() + 1;
+		var dd=d.getDate();
+		var hh=d.getHours();
+		var mm=d.getMinutes();
+		var ss=d.getSeconds();
+		if(MM>=1&& MM<=9){
+			MM="0"+MM;
+		}
+		if(dd>=1&& dd<=9){
+			dd="0"+dd;
+		}
+		if(hh>=1&& hh<=9){
+			hh="0"+hh;
+		}
+		if(mm>=1&& mm<=9){
+			mm="0"+mm;
+		}
+		if(ss>=1&& ss<=9){
+			ss="0"+ss;
+		}
+		var timenow = yy + '-' + MM + '-'
+				+ dd + ' ' + hh + ':' + mm + ':'
+				+ ss;
+		return timenow;
+ }
+ // 获取系统当前时间字符串
+ function getNowTimeStr(){
+	 var date = new Date(); 
+		// 获取当前时间
+		var d = new Date();
+		var yy=d.getFullYear();
+		var MM=d.getMonth() + 1;
+		var dd=d.getDate();
+		var hh=d.getHours();
+		var mm=d.getMinutes();
+		var ss=d.getSeconds();
+		if(MM>=1&& MM<=9){
+			MM="0"+MM;
+		}
+		if(dd>=1&& dd<=9){
+			dd="0"+dd;
+		}
+		if(hh>=1&& hh<=9){
+			hh="0"+hh;
+		}
+		if(mm>=1&& mm<=9){
+			mm="0"+mm;
+		}
+		if(ss>=1&& ss<=9){
+			ss="0"+ss;
+		}
+		var timenow = yy + MM + dd +  hh   + mm + ss;
+		return timenow;
+ }
+ //展示实时获取的消息
+ function  showNewMessage(message){
+	var li = document.createElement('li');
+		li.className = 'message_li left';
+		li.innerHTML=message.content;
+		li.id=message.msgId;
+		table.appendChild(li);
+}
+ //连接WebSocket服务
+	function connect(user_id){
+		if ('WebSocket' in window){
+		     ws = new WebSocket("ws://localhost:8080/socketServer/"+user_id);    
+		}    
+	   else if ('MozWebSocket' in window){
+	       ws = new MozWebSocket("ws://localhost:8080/socketServer/"+user_id);    
+	   }
+	   else{
+	       alert("该浏览器不支持websocket");    
+	   }    
+		 ws.onmessage = function(evt) {    
+			    console.log(evt.data);
+			    //将返回的消息转我json对象
+			    var json= $.parseJSON(evt.data);
+			    //判断接收的消息
+			    //1、消息接收人是当前账号
+			    // 2、并且消息发送方是好友账号
+		        if(json.receiveId==user_id&&json.sendId==friend_id){
+		        	showNewMessage(json);
+		        }
+		    };    
+		        
+		    ws.onclose = function(evt) {    
+		        alert("通讯中断");    
+		    };    
+		        
+		    ws.onopen = function(evt) {    
+		        //alert("通讯正常");    
+		    };  
+	}
+ //根据参数名，获取连接中的参数
+function getParam(name) {
+	arrUrl = arrUrl.substring(arrUrl.indexOf(name), arrUrl.length)
+	var nameLength = (name.length) + 1;
+	var param = "";
+	if (arrUrl.indexOf("&") == -1 && arrUrl.indexOf("#") == -1) {
+		param = arrUrl.substring(arrUrl.indexOf(name + "=") + nameLength,
+				arrUrl.length);
+	} else if (arrUrl.indexOf("&") != -1) {
+		param = arrUrl.substring(
+				param.indexOf(name + "=") + nameLength + 1, arrUrl
+						.indexOf("&"));
+	} else if (arrUrl.indexOf("#") != -1) {
+		param = arrUrl.substring(
+				param.indexOf(name + "=") + nameLength + 1, arrUrl
+						.indexOf("#"));
+	}
+	return param;
+}
+</script>
+</html>

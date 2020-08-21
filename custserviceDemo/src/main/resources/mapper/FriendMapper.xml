@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.a.custservice.mapper.FriendMapper">
+    <resultMap id="BaseResultMap" type="com.a.custservice.enty.Friend">
+        <result column="friend_id" property="friendId" jdbcType="VARCHAR"/>
+        <result column="friend_name" property="friendName" jdbcType="VARCHAR"/>
+        <result column="add_status" property="addStatus" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="getFriendList" resultMap="BaseResultMap">
+        SELECT f.friend_id, u.user_name as friend_name, f.add_status
+        FROM sys_friend f
+                 LEFT JOIN sys_user u
+                           ON f.friend_id = u.user_id
+        WHERE f.user_id = #{user_id}
+    </select>
+
+</mapper>

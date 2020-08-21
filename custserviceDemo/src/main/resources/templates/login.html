@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>登录</title>
+<script th:src="@{/jquery/jquery.min.js}"></script>
+</head>
+<body>
+
+	账号：
+	<input type="text" id="username"></input> 
+	密码：
+	<input type="password" id="pwd"></input>
+	<br>
+	<button onclick="login()">登录</button>
+	<button onclick="register()">注册</button>
+	<br>
+	<br>
+	<br>
+	  当前在线人数:<div id="sum" th:text="${num}" ></div> <br>
+           在线用户：<div id="users" th:text="${users}"></div> <br>
+
+	<script type="text/javascript">
+		function login() {
+			var user_id=$("#username").val();
+			var pwd=$("#pwd").val();
+			if (user_id != "" && pwd != "") {
+				/* window.open('sockettest'); */
+				$.ajax({
+					type : "post",
+					url : "/sys/login", //向后端请求数据的url
+					data : {user_id,pwd},
+					success : function(data) {
+						console.log(data);
+						if(data.result=="0"){
+							alert("账号或密码不正确");
+						}else{
+							/* window.open('sockettest'); */
+							openFriendList();
+						}
+					}
+				});
+			}else{
+				alert("账号或密码不能为空");
+			}
+		}
+
+		//页面跳转,将用户账号传递过去
+		function openFriendList(){
+			var obj = $("#username").val(); //传给弹出页面参数
+			var url = 'friend_list?obj='+obj;
+			url = encodeURI(url);
+			window.open(url, "");
+		}
+		
+		function register() {
+			window.open('register');
+		}
+	
+	</script>
+</body>
+</html>
